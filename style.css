@@ -1,0 +1,411 @@
+/* ===== Reset & Base ===== */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #0d0d14;
+  --bg2: #15151f;
+  --bg3: #1c1c2a;
+  --border: #2a2a40;
+  --accent: #7c3aed;
+  --accent2: #a855f7;
+  --accent-glow: rgba(124, 58, 237, 0.35);
+  --text: #e8e8f0;
+  --text2: #9090b0;
+  --text3: #5a5a7a;
+  --red: #ef4444;
+  --green: #22c55e;
+  --card-radius: 12px;
+  --transition: 0.2s ease;
+}
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  line-height: 1.6;
+}
+
+a { color: var(--accent2); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+code {
+  background: var(--bg3);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-family: 'Cascadia Code', 'Fira Code', monospace;
+  font-size: 0.85em;
+  color: var(--accent2);
+}
+
+/* ===== Header ===== */
+.site-header {
+  background: var(--bg2);
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  backdrop-filter: blur(8px);
+}
+
+.header-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 24px;
+  height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 1.4rem;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+}
+
+.logo-icon { font-size: 1.6rem; }
+.logo-text { color: var(--text); }
+.logo-accent { color: var(--accent2); }
+
+.header-nav { display: flex; gap: 8px; }
+
+.nav-link {
+  padding: 6px 16px;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--text2);
+  transition: background var(--transition), color var(--transition);
+}
+
+.nav-link:hover,
+.nav-link.active {
+  background: var(--bg3);
+  color: var(--text);
+  text-decoration: none;
+}
+
+/* ===== Main ===== */
+.main-content {
+  flex: 1;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 40px 24px 60px;
+  width: 100%;
+}
+
+/* ===== Hero ===== */
+.hero {
+  text-align: center;
+  margin-bottom: 40px;
+  padding: 48px 0 0;
+}
+
+.hero-title {
+  font-size: clamp(2rem, 5vw, 3.2rem);
+  font-weight: 900;
+  letter-spacing: -1.5px;
+  background: linear-gradient(135deg, var(--text) 40%, var(--accent2));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 12px;
+}
+
+.hero-subtitle {
+  font-size: 1.1rem;
+  color: var(--text2);
+  max-width: 520px;
+  margin: 0 auto;
+}
+
+/* ===== Filters ===== */
+.filters-bar {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 32px;
+  flex-wrap: wrap;
+}
+
+.search-input,
+.genre-filter {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 16px;
+  color: var(--text);
+  font-size: 0.95rem;
+  outline: none;
+  transition: border-color var(--transition), box-shadow var(--transition);
+}
+
+.search-input { flex: 1; min-width: 200px; }
+.genre-filter { min-width: 180px; cursor: pointer; }
+
+.search-input:focus,
+.genre-filter:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-glow);
+}
+
+/* ===== Games Grid ===== */
+.games-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 20px;
+}
+
+.loading-msg {
+  grid-column: 1/-1;
+  text-align: center;
+  color: var(--text3);
+  padding: 60px 0;
+  font-size: 1.1rem;
+}
+
+.no-results {
+  text-align: center;
+  color: var(--text3);
+  padding: 60px 0;
+  font-size: 1.1rem;
+}
+
+/* ===== Game Card ===== */
+.game-card {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--card-radius);
+  overflow: hidden;
+  cursor: pointer;
+  transition: transform var(--transition), box-shadow var(--transition), border-color var(--transition);
+  text-decoration: none;
+  color: inherit;
+  display: block;
+}
+
+.game-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 32px rgba(0,0,0,0.4), 0 0 0 1px var(--accent);
+  border-color: var(--accent);
+  text-decoration: none;
+}
+
+.game-cover {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+  background: var(--bg3);
+  display: block;
+}
+
+.game-cover-placeholder {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  background: var(--bg3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 3.5rem;
+}
+
+.game-card-body {
+  padding: 12px 14px 14px;
+}
+
+.game-card-title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  margin-bottom: 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.game-card-meta {
+  font-size: 0.78rem;
+  color: var(--text3);
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.tag {
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 1px 6px;
+  font-size: 0.72rem;
+  color: var(--text2);
+}
+
+.play-overlay {
+  position: relative;
+}
+
+.play-btn-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(124,58,237,0.75);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity var(--transition);
+  font-size: 2.5rem;
+}
+
+.game-card:hover .play-btn-overlay { opacity: 1; }
+
+/* ===== Info Section ===== */
+.info-section {
+  margin-top: 64px;
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--card-radius);
+  padding: 32px;
+}
+
+.info-section h2 {
+  font-size: 1.4rem;
+  font-weight: 700;
+  margin-bottom: 20px;
+  color: var(--accent2);
+}
+
+.steps-list {
+  padding-left: 20px;
+  margin-bottom: 24px;
+  color: var(--text2);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.steps-list li { font-size: 0.95rem; }
+
+.code-block {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 20px;
+  overflow-x: auto;
+}
+
+.code-block pre {
+  font-family: 'Cascadia Code', 'Fira Code', monospace;
+  font-size: 0.85rem;
+  color: var(--accent2);
+  white-space: pre;
+}
+
+/* ===== Player Page ===== */
+.player-main { padding-top: 32px; }
+
+.game-info-bar {
+  margin-bottom: 20px;
+  display: flex;
+  align-items: baseline;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.game-title-player {
+  font-size: 1.5rem;
+  font-weight: 800;
+}
+
+.game-meta {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  color: var(--text3);
+  font-size: 0.85rem;
+}
+
+/* ===== Controls Legend ===== */
+.controls-legend {
+  max-width: 800px;
+  margin: 28px auto 0;
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--card-radius);
+  padding: 24px;
+}
+
+.controls-legend h3 {
+  font-size: 1rem;
+  font-weight: 700;
+  margin-bottom: 16px;
+  color: var(--text2);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-size: 0.8rem;
+}
+
+.controls-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 20px;
+}
+
+.ctrl-group h4 {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--accent2);
+  margin-bottom: 8px;
+}
+
+.ctrl-table { border-collapse: collapse; width: 100%; }
+.ctrl-table td { padding: 3px 6px; font-size: 0.82rem; color: var(--text2); }
+.ctrl-table td:first-child { padding-right: 12px; }
+
+.key {
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 1px 6px;
+  font-family: monospace;
+  font-size: 0.78rem;
+  color: var(--text);
+  white-space: nowrap;
+}
+
+.ctrl-note {
+  font-size: 0.8rem;
+  color: var(--text3);
+  line-height: 1.5;
+}
+
+/* ===== Footer ===== */
+.site-footer {
+  background: var(--bg2);
+  border-top: 1px solid var(--border);
+  text-align: center;
+  padding: 24px;
+  color: var(--text3);
+  font-size: 0.82rem;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.footer-note { font-size: 0.75rem; opacity: 0.7; }
+
+/* ===== Responsive ===== */
+@media (max-width: 600px) {
+  .header-inner { padding: 0 16px; }
+  .main-content { padding: 24px 16px 48px; }
+  .hero { padding-top: 32px; }
+  .games-grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 14px; }
+  .game-info-bar { flex-direction: column; gap: 8px; }
+  .controls-grid { grid-template-columns: 1fr 1fr; }
+  .info-section { padding: 20px; }
+}

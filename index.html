@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Emulador Online</title>
+  <link rel="manifest" href="./manifest.json">
+  <meta name="theme-color" content="#7c3aed">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Emulador">
+  <link rel="apple-touch-icon" href="./logo.png">
+  <link rel="stylesheet" href="./style.css">
+  <link rel="stylesheet" href="./emulator.min.css">
+  <style>
+    .tag-system {
+      background: var(--accent);
+      color: #fff;
+      border-color: var(--accent);
+      font-size: 0.68rem;
+    }
+    .game-count {
+      color: var(--text3);
+      font-size: 0.9rem;
+      margin-bottom: 16px;
+    }
+    .tabs {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 24px;
+    }
+    .tab-btn {
+      padding: 8px 18px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--bg2);
+      color: var(--text2);
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .tab-btn:hover { border-color: var(--accent); color: var(--text); }
+    .tab-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+    #game-container {
+      position: fixed;
+      inset: 0;
+      width: 100vw;
+      height: 100vh;
+      background: #000;
+      z-index: 999;
+    }
+    #exit-fullscreen {
+      position: fixed;
+      top: 12px;
+      right: 16px;
+      z-index: 1000;
+      background: rgba(0,0,0,0.6);
+      color: #fff;
+      border: 1px solid #ffffff44;
+      border-radius: 6px;
+      padding: 6px 14px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      backdrop-filter: blur(4px);
+    }
+    #exit-fullscreen:hover { background: rgba(200,0,0,0.7); }
+    .loading-screen {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 20px;
+      padding: 60px 20px;
+      text-align: center;
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .loading-screen img {
+      height: 220px;
+      object-fit: contain;
+      border-radius: 8px;
+      box-shadow: 0 4px 24px #0008;
+    }
+    .loading-screen h2 { font-size: 1.3rem; color: var(--text); }
+    .loading-screen p  { color: var(--text2); font-size: 0.9rem; }
+    .spinner {
+      width: 40px; height: 40px;
+      border: 4px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .error-msg {
+      color: var(--red);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+      padding: 60px 20px;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+
+  <header class="site-header">
+    <div class="header-inner">
+      <div class="logo">
+        <span class="logo-icon">🎮</span>
+        <span class="logo-text">SNES<span class="logo-accent">Online</span></span>
+      </div>
+      <nav class="header-nav" id="header-nav"></nav>
+    </div>
+  </header>
+
+  <main class="main-content" id="main"></main>
+
+  <footer class="site-footer">
+    <p>Emulação via <a href="https://emulatorjs.org/" target="_blank" rel="noopener">EmulatorJS</a></p>
+    <p class="footer-note">Apenas para fins educacionais. Use somente ROMs que você possui legalmente.</p>
+  </footer>
+
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('./sw.js');
+    }
+  </script>
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    const gameId = params.get('id');
+
+    // ── BIBLIOTECA ────────────────────────────────────────────────────────────
+    function showLibrary(games) {
+      document.title = 'Emulador Online — Biblioteca';
+      document.getElementById('header-nav').innerHTML =
+        `<a href="index.html" class="nav-link active">Biblioteca</a>`;
+
+      document.getElementById('main').innerHTML = `
+        <section class="hero">
+          <h1 class="hero-title">Jogue no Navegador</h1>
+          <p class="hero-subtitle">Clique em qualquer jogo para começar a jogar instantaneamente, sem instalação.</p>
+        </section>
+        <div class="filters-bar">
+          <input type="text" id="search" class="search-input" placeholder="Buscar jogo...">
+        </div>
+        <div class="tabs" id="tabs"></div>
+        <div id="game-count" class="game-count"></div>
+        <div id="games-grid" class="games-grid"></div>`;
+
+      function renderGames(list) {
+        const grid  = document.getElementById('games-grid');
+        const count = document.getElementById('game-count');
+        count.textContent = list.length + ' jogo' + (list.length !== 1 ? 's' : '') + ' encontrado' + (list.length !== 1 ? 's' : '');
+        if (list.length === 0) {
+          grid.innerHTML = '<div class="no-results">Nenhum jogo encontrado.</div>';
+          return;
+        }
+        grid.innerHTML = list.map(g => `
+          <a class="game-card" href="?id=${encodeURIComponent(g.id)}">
+            <div class="play-overlay">
+              ${g.cover
+                ? `<img class="game-cover" src="${g.cover}" alt="${g.title}" loading="lazy" onerror="this.parentElement.innerHTML='<div class=\\'game-cover-placeholder\\'>🎮</div>'">`
+                : `<div class="game-cover-placeholder">🎮</div>`}
+              <div class="play-btn-overlay">▶</div>
+            </div>
+            <div class="game-card-body">
+              <div class="game-card-title">${g.title}</div>
+              <div class="game-card-meta">
+                <span class="tag tag-system">${g.system}</span>
+                ${g.year    ? `<span class="tag">${g.year}</span>` : ''}
+                ${g.players ? `<span class="tag">👤 ${g.players}</span>` : ''}
+              </div>
+            </div>
+          </a>`).join('');
+      }
+
+      // Monta abas com sistemas disponíveis
+      const systems = ['Todos', ...new Set(games.map(g => g.system))];
+      let activeTab = 'Todos';
+      const tabsEl = document.getElementById('tabs');
+      tabsEl.innerHTML = systems.map(s =>
+        `<button class="tab-btn${s === 'Todos' ? ' active' : ''}" data-system="${s}">${s}</button>`
+      ).join('');
+      tabsEl.addEventListener('click', e => {
+        const btn = e.target.closest('.tab-btn');
+        if (!btn) return;
+        tabsEl.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        activeTab = btn.dataset.system;
+        applyFilters();
+      });
+
+      function applyFilters() {
+        const q = document.getElementById('search').value.toLowerCase();
+        renderGames(games.filter(g =>
+          g.title.toLowerCase().includes(q) &&
+          (activeTab === 'Todos' || g.system === activeTab)
+        ));
+      }
+
+      document.getElementById('search').addEventListener('input', applyFilters);
+      applyFilters();
+    }
+
+    // ── PLAYER ────────────────────────────────────────────────────────────────
+    function showPlayer(game) {
+      document.title = game.title + ' — Online';
+      document.getElementById('header-nav').innerHTML =
+        `<a href="index.html" class="nav-link">← Biblioteca</a>`;
+
+      document.getElementById('main').innerHTML = `
+        <div class="player-main">
+          <div class="game-info-bar">
+            <h1 class="game-title-player">${game.title}</h1>
+            <div class="game-meta">
+              <span class="tag tag-system">${game.system}</span>
+              ${game.year    ? `<span class="tag">${game.year}</span>` : ''}
+              ${game.players ? `<span class="tag">👤 ${game.players}</span>` : ''}
+            </div>
+          </div>
+          <div id="screen">
+            <div class="loading-screen">
+              ${game.cover ? `<img src="${game.cover}" alt="${game.title}">` : ''}
+              <h2>${game.title}</h2>
+              <div class="spinner"></div>
+              <p>Carregando emulador...</p>
+            </div>
+            <div id="game-container" style="display:none;"></div>
+            <button id="exit-fullscreen" style="display:none;" onclick="history.back()">✕ Sair</button>
+          </div>
+        </div>`;
+
+      window.EJS_player        = '#game-container';
+      window.EJS_core          = game.core;
+      window.EJS_gameUrl       = game.rom;
+      window.EJS_startOnLoaded = true;
+      window.EJS_pathtodata    = './data/';
+      if (game.cover) window.EJS_gameImageUrl = game.cover;
+      if (game.system === 'Neo Geo') {
+        window.EJS_biosUrl = './roms/neogeo/neogeo.zip';
+        window.EJS_gameParentUrl = './roms/neogeo/neogeo.zip';
+        window.EJS_dontExtractBIOS = true;
+      }
+      window.EJS_paths = {
+        'emulator.min.js':  './emulator.min.js',
+        'emulator.min.css': './emulator.min.css',
+      };
+      window.EJS_ready = function() {
+        const ls = document.querySelector('.loading-screen');
+        if (ls) ls.style.display = 'none';
+        document.getElementById('game-container').style.display = 'block';
+        document.getElementById('exit-fullscreen').style.display = 'block';
+        document.body.style.overflow = 'hidden';
+      };
+
+      document.addEventListener('keydown', function(e) {
+        if (e.key === 'F11') {
+          e.preventDefault();
+          const el = document.getElementById('game-container');
+          if (!document.fullscreenElement) {
+            (el.requestFullscreen || el.webkitRequestFullscreen).call(el);
+          } else {
+            (document.exitFullscreen || document.webkitExitFullscreen).call(document);
+          }
+        }
+      }, true);
+
+      const script = document.createElement('script');
+      script.src = './loader.js';
+      script.onerror = () => {
+        document.getElementById('screen').innerHTML =
+          `<div class="error-msg"><div style="font-size:2.5rem">⚠️</div><div>Falha ao carregar o EmulatorJS.</div></div>`;
+      };
+      document.body.appendChild(script);
+    }
+
+    function showError(msg) {
+      document.getElementById('header-nav').innerHTML =
+        `<a href="index.html" class="nav-link">← Biblioteca</a>`;
+      document.getElementById('main').innerHTML =
+        `<div class="error-msg" style="margin-top:60px;">
+          <div style="font-size:2.5rem">⚠️</div>
+          <div>${msg}</div>
+          <a href="index.html" style="color:var(--accent2);">← Voltar à biblioteca</a>
+        </div>`;
+    }
+
+    // ── ROTEAMENTO ────────────────────────────────────────────────────────────
+    fetch('./games.json')
+      .then(r => r.json())
+      .then(games => {
+        if (gameId) {
+          const game = games.find(g => g.id === gameId);
+          game ? showPlayer(game) : showError(`Jogo não encontrado: "${gameId}"`);
+        } else {
+          showLibrary(games);
+        }
+      })
+      .catch(() => showError('Erro ao carregar games.json.'));
+  </script>
+
+</body>
+</html>
