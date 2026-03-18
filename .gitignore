@@ -1,11 +1,8 @@
-# ROMs — conteúdo pesado e protegido por direitos autorais
-roms/
-
-# Capas dos jogos — 347MB de imagens
-covers/
-
 # Cores e assets do EmulatorJS — 296MB, baixar via script
 data/
+
+# Git interno dentro da pasta roms
+roms/.git/
 
 # Arquivos temporários
 *.7z
