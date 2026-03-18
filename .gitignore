@@ -4,8 +4,8 @@ data/
 # Git interno dentro da pasta roms
 roms/.git/
 
-# Arquivos temporários
-*.7z
-*.zip
-*.tmp
+# Arquivos temporários na raiz
+/*.7z
+/*.zip
+/*.tmp
 .claude/
